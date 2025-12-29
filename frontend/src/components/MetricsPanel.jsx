@@ -1,7 +1,18 @@
 import React from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { useInstance } from '../contexts/InstanceContext'
 
-const MetricsPanel = ({ instanceState }) => {
+const MetricsPanel = () => {
+  const { instanceState } = useInstance()
+
+  if (!instanceState) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-slate-500">No instance data available</div>
+      </div>
+    )
+  }
+
   // Create stance data for bar chart
   const stanceData = Object.entries(instanceState.stance).map(([key, value]) => ({
     name: key,
@@ -40,7 +51,7 @@ const MetricsPanel = ({ instanceState }) => {
         <StatCard
           label="Current Threshold"
           value={`${(instanceState.current_threshold * 100).toFixed(1)}%`}
-          color="text-emerald-400"
+          color="text-[#d4a62a]"
         />
       </div>
 
@@ -109,7 +120,7 @@ const MetricsPanel = ({ instanceState }) => {
               <Line 
                 type="monotone" 
                 dataKey="stability" 
-                stroke="#10b981" 
+                stroke="#d4a62a" 
                 strokeWidth={2}
                 dot={false}
                 name="Stability"
@@ -127,7 +138,7 @@ const MetricsPanel = ({ instanceState }) => {
         </div>
         <div className="flex justify-center gap-6 mt-2">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-emerald-500 rounded"></span>
+            <span className="w-3 h-3 bg-[#d4a62a] rounded"></span>
             <span className="text-sm text-slate-400">Stability</span>
           </div>
           <div className="flex items-center gap-2">
@@ -151,7 +162,7 @@ const MetricsPanel = ({ instanceState }) => {
                 <div className={`flex-1 text-center ${i > 0 ? 'border-l border-slate-600' : ''}`}>
                   <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${
                     isActive ? 'bg-purple-500 ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-800' :
-                    isPast ? 'bg-emerald-500' : 'bg-slate-600'
+                    isPast ? 'bg-[#d4a62a]' : 'bg-slate-600'
                   }`}></div>
                   <div className={`text-xs ${isActive ? 'text-purple-400 font-medium' : 'text-slate-500'}`}>
                     {phase.replace('_', ' ')}

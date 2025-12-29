@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { Clock, Zap, CheckCircle, XCircle } from 'lucide-react'
+import { useInstance } from '../contexts/InstanceContext'
+import { useSession } from '../contexts/SessionContext'
 
-const HistoryPanel = ({ instanceId, apiBase }) => {
+const HistoryPanel = () => {
+  const { selectedInstanceId } = useInstance()
+  const { apiBase } = useSession()
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchHistory()
-  }, [instanceId])
+    if (selectedInstanceId) {
+      fetchHistory()
+    }
+  }, [selectedInstanceId, apiBase])
 
   const fetchHistory = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`${apiBase}/instances/${instanceId}/history?limit=50`)
+      const res = await fetch(`${apiBase}/instances/${selectedInstanceId}/history?limit=50`)
       const data = await res.json()
       setHistory(data.history || [])
     } catch (err) {
@@ -20,6 +26,14 @@ const HistoryPanel = ({ instanceId, apiBase }) => {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!selectedInstanceId) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-slate-500">Select an instance to view history</div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -59,7 +73,7 @@ const HistoryPanel = ({ instanceId, apiBase }) => {
               </div>
               <div className="flex items-center gap-2">
                 {item.metadata?.was_evaluated ? (
-                  <span className="flex items-center gap-1 text-xs text-emerald-400">
+                  <span className="flex items-center gap-1 text-xs text-[#d4a62a]">
                     <CheckCircle className="w-3 h-3" />
                     Evaluated
                   </span>

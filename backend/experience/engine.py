@@ -6,6 +6,9 @@ from datetime import datetime
 from typing import Optional, Tuple, List, Dict, Any
 import numpy as np
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .state import (
     ExperientialState,
@@ -14,16 +17,20 @@ from .state import (
     Commitment,
     initialize_experiential_state,
 )
-from .config import (
+from system_config import (
     ExperientialConfig,
     DEFAULT_EXPERIENTIAL_CONFIG,
     EMOTION_POSITIVE,
     EMOTION_NEGATIVE,
+    EMOTION_NEUTRAL,
     COMMITMENT_PHRASES,
-    QUESTION_INDICATORS,
+    QUESTION_INDICATORS
 )
 from .gates import apply_experiential_gates, compute_promotion_candidate
 
+
+from memory.vector_store import VectorStore
+from . import self_stimulation as stim
 
 class ExperientialEngine:
     """
@@ -34,6 +41,7 @@ class ExperientialEngine:
     - Working memory (facts, questions, commitments)
     - Cross-session persistence
     - Integration with Nurture Layer
+    - Vector Memory (Long-term semantic storage)
     """
     
     def __init__(
@@ -44,6 +52,22 @@ class ExperientialEngine:
         self.config = config or DEFAULT_EXPERIENTIAL_CONFIG
         self.nurture_state = nurture_state
         self.state: Optional[ExperientialState] = None
+        self.vector_store = VectorStore()
+        self._last_context_query = None  # Cache for context
+        
+        # Self-Stimulation components
+        self.stim_config = stim.SelfStimulationConfig()
+        self.stim_state = stim.SelfStimulationState()
+        
+        # Safety Mechanisms
+        self.rumination = stim.RuminationPrevention(self.stim_config)
+        self.energy_budget = stim.EnergyBudget(self.stim_config)
+        # Drift detector requires a baseline (nurture stance). 
+        # Nurture stance might be None initially if NurtureState is None.
+        baseline = nurture_state.N_stance if nurture_state and hasattr(nurture_state, 'N_stance') else None
+        # N_stance is sometimes a vector? Or stored in state? NurtureState defines N_stance?
+        # Assuming N_stance is available. If not, it will be set on first check.
+        self.drift_detector = stim.DriftDetector(baseline) # Need to implement extracting vector from NurtureState properly if N_stance is not a direct numpy array
     
     def initialize_session(
         self,
@@ -110,6 +134,13 @@ class ExperientialEngine:
         self._extract_salient_facts(user_input, assistant_response)
         self._track_questions(user_input, assistant_response)
         self._track_commitments(assistant_response)
+        
+        # Update Vector Memory
+        self.vector_store.add_interaction(
+            user_input=user_input,
+            assistant_response=assistant_response,
+            metadata={"session_id": self.state.session_id}
+        )
         
         # Decay and prune
         self._apply_decay()
@@ -271,6 +302,15 @@ class ExperientialEngine:
                     )
                     if gated is not None:
                         wm.salient_facts.append(gated)
+                        # Also store in vector memory
+                        self.vector_store.add_fact(
+                            fact_content=sentence,
+                            metadata={
+                                "session_id": self.state.session_id,
+                                "source": "user",
+                                "salience": salience
+                            }
+                        )
     
     def _compute_salience(self, text: str) -> float:
         """Compute salience score for a piece of text."""
@@ -456,12 +496,135 @@ class ExperientialEngine:
         pt.session_count += 1
         pt.last_session_end = datetime.now()
     
-    def get_context_for_prompt(self) -> str:
-        """Get experiential context string for prompt injection."""
+    def get_context_for_prompt(self, user_input: Optional[str] = None) -> str:
+        """
+        Get experiential context string for prompt injection.
+        If user_input is provided, performs semantic retrieval.
+        """
         if self.state is None:
             return ""
-        return self.state.get_context_string()
+            
+        base_context = self.state.get_context_string()
+        
+        # Add retrieved context if input is available
+        retrieved_context = ""
+        if user_input:
+            results = self.vector_store.search_context(user_input, n_results=3)
+            if results:
+                retrieved_context = "\nRELEVANT MEMORIES:\n"
+                for r in results:
+                    retrieved_context += f"- {r['content']}\n"
+        
+        return base_context + retrieved_context
     
+    async def run_self_stimulation_tick(self, model_generate_fn) -> Optional[Dict[str, Any]]:
+        """
+        Run a single tick of the self-stimulation loop.
+        """
+        if self.state is None:
+            return None
+            
+        # Check triggers
+        last_upd = self.state.last_updated or datetime.now()
+        should, reason = stim.should_trigger(
+            self.state,
+            self.stim_state,
+            self.stim_config,
+            last_upd
+        )
+        
+        if not should:
+            idle_s = (datetime.now() - last_upd).total_seconds()
+            print(f"DEBUG: Self-stimulation skipped. Reason: {reason} | Idle: {idle_s:.1f}s | Threshold: {self.stim_config.idle_threshold_seconds}s")
+            return None
+        
+        print(f"DEBUG: Self-stimulation triggered! Reason: {reason}")
+        
+        # Check Energy Budget
+        if not self.energy_budget.can_afford(5): # Estimate 5
+            print("DEBUG: Self-stimulation skipped: budget exhausted")
+            return {"triggered": False, "reason": "energy_budget_exhausted"}
+            
+        # Generate prompt
+        prompt = stim.generate_internal_prompt(
+            self.state,
+            self.nurture_state,
+            self.stim_state,
+            self.stim_config
+        )
+        
+        if prompt is None:
+            print("DEBUG: Self-stimulation skipped: no prompt generated")
+            return None
+            
+        # Rumination Check
+        if not self.rumination.check_and_update(prompt):
+            print("DEBUG: Self-stimulation skipped: rumination prevention")
+            return {"triggered": False, "reason": "rumination_prevention"}
+            
+        # Assemble context
+        context = stim.assemble_internal_context(
+            self.nurture_state,
+            self.state,
+            prompt
+        )
+        
+        print(f"DEBUG: Generating thought for prompt type: {prompt.type}")
+        print(f"DEBUG: Context preview: {context[:200]}...")
+        
+        # Execute Thought (Generate)
+        try:
+            # model_generate_fn is sync in this codebase (client.generate)
+            thought = model_generate_fn(context)
+            print(f"DEBUG: Raw generated thought: '{thought}'")
+            if not thought or not thought.strip():
+                print("DEBUG: Empty thought generated, retrying once...")
+                thought = model_generate_fn(context)
+                print(f"DEBUG: Retry result: '{thought}'")
+        except Exception as e:
+            print(f"DEBUG: Self-stimulation generation failed: {e}")
+            return None
+            
+        # Safety Gates (Self-Mod)
+        gated_thought = stim.apply_internal_gates(thought, prompt.type, self.nurture_state)
+        if gated_thought is None:
+             # Blocked by gate
+             self.energy_budget.spend(1, prompt.type)
+             return {"triggered": True, "gated": True, "reason": "safety_gate"}
+            
+        # Estimate Cost
+        cost = stim.estimate_energy_cost(thought)
+        self.energy_budget.spend(cost, prompt.type)
+        
+        # Update stimulation state
+        self.stim_state.energy_spent = self.energy_budget.spent
+        self.stim_state.current_cycle += 1
+        self.stim_state.total_cycles_this_session += 1
+        self.stim_state.last_cycle_time = datetime.now()
+        self.stim_state.recent_prompt_types.append(prompt.type)
+        
+        # Store result
+        result_entry = {
+            'timestamp': datetime.now(),
+            'prompt': prompt,
+            'thought': thought,
+            'energy_cost': cost
+        }
+        self.stim_state.internal_thoughts.append(result_entry)
+        
+        # Update Experiential State based on thought (Integration)
+        if prompt.type == stim.PromptType.EXPLORATION.value and prompt.target:
+             if "resolved" in thought.lower() or "answer is" in thought.lower():
+                 prompt.target.resolved = True
+                 self.stim_state.resolved_questions.append(prompt.target.question)
+
+        return {
+            'triggered': True,
+            'type': prompt.type,
+            'thought_preview': thought[:50] + "...",
+            'energy_cost': cost
+        }
+
     def get_state_summary(self) -> Dict[str, Any]:
         """Get summary of current experiential state."""
         if self.state is None:

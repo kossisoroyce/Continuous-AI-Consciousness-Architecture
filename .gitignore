@@ -3,7 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
+.venv/
 .env
+*.egg-info/
+.pytest_cache/
 
 # Node
 node_modules/
@@ -12,12 +15,28 @@ dist/
 
 # Data
 nurture_data/
+*.db
+*.sqlite
+backend/data/
 
 # IDE
 .vscode/
 .idea/
 *.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test artifacts
+coverage/
+.coverage
+
+# Temp files
+*.tmp
+*.temp

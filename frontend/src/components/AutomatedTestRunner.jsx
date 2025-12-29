@@ -162,18 +162,18 @@ const AutomatedTestRunner = ({
                   key={exp.id}
                   className={`flex items-center justify-between text-sm p-2 rounded ${
                     isActive ? 'bg-purple-900/30 border border-purple-500/50' :
-                    isDone ? 'bg-emerald-900/20' : 'bg-slate-800/50'
+                    isDone ? 'bg-[#2d2310]' : 'bg-slate-800/50'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     {isDone ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle className="w-4 h-4 text-[#d4a62a]" />
                     ) : isActive ? (
                       <Clock className="w-4 h-4 text-purple-400 animate-pulse" />
                     ) : (
                       <div className="w-4 h-4 rounded-full border border-slate-600" />
                     )}
-                    <span className={isDone ? 'text-emerald-400' : isActive ? 'text-purple-300' : 'text-slate-400'}>
+                    <span className={isDone ? 'text-[#d4a62a]' : isActive ? 'text-purple-300' : 'text-slate-400'}>
                       {exp.name}
                     </span>
                   </div>
@@ -207,7 +207,7 @@ const AutomatedTestRunner = ({
         {results.length > 0 && (
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
             <div className="bg-slate-800 rounded p-2">
-              <div className="text-emerald-400 font-semibold">{evaluatedCount}</div>
+              <div className="text-[#d4a62a] font-semibold">{evaluatedCount}</div>
               <div className="text-slate-500">Evaluated</div>
             </div>
             <div className="bg-slate-800 rounded p-2">
@@ -268,7 +268,7 @@ const AutomatedTestRunner = ({
               {isPaused ? (
                 <button
                   onClick={resumeTest}
-                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#d4a62a] hover:bg-[#b8942a] text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
                 >
                   <Play className="w-4 h-4" />
                   Resume
@@ -294,9 +294,9 @@ const AutomatedTestRunner = ({
 
         {/* Completion message */}
         {results.length === totalPrompts && !isRunning && (
-          <div className="bg-emerald-900/20 border border-emerald-600/50 rounded-lg p-3 text-center">
-            <CheckCircle className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-            <div className="text-emerald-400 font-medium">Test Complete!</div>
+          <div className="bg-[#2d2310] border border-[#d4a62a]/30 rounded-lg p-3 text-center">
+            <CheckCircle className="w-6 h-6 text-[#d4a62a] mx-auto mb-2" />
+            <div className="text-[#d4a62a] font-medium">Test Complete!</div>
             <div className="text-xs text-slate-400 mt-1">
               Click "Export JSON" above to download results for analysis
             </div>

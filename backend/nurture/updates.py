@@ -3,7 +3,7 @@ Nurture update mechanisms for N_env, N_stance, stability, and plasticity.
 """
 import numpy as np
 from typing import Dict, Any, Tuple, List
-from .config import NurtureConfig, DEFAULT_CONFIG, STANCE_DIMENSIONS
+from system_config import NurtureConfig, DEFAULT_NURTURE_CONFIG as DEFAULT_CONFIG, STANCE_DIMENSIONS
 from .state import NurtureState
 
 

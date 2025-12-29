@@ -1,21 +1,39 @@
 import React, { useState, useEffect } from 'react'
-import { Brain, MessageCircle, HelpCircle, CheckSquare, Sparkles, RefreshCw, Send } from 'lucide-react'
+import { ExperienceSplash } from './experience/ExperienceSplash'
+import { ExperienceChat } from './experience/ExperienceChat'
+import { ExperienceInspector } from './experience/ExperienceInspector'
+import { ExperienceAutomatedRunner } from './experience/ExperienceAutomatedRunner'
+import { ExperienceThoughts } from './experience/ExperienceThoughts'
+import { useSession } from '../contexts/SessionContext'
+import * as cognitiveApi from '../services/cognitiveApi'
 
-const API_BASE = '/api'
+const PULSE_VERSION = 3 // Cache bust
+const OPERATOR_ID = 'default' // TODO: Get from auth context
 
-function ExperientialPanel({ instanceId, sessionId, apiKeyConfigured, openrouterApiKey }) {
+function ExperientialPanel({ instanceId, sessionId, replayConversation }) {
+  const { 
+    apiBase, 
+    apiKeyConfigured, 
+    openaiApiKey 
+  } = useSession()
+
   const [experientialState, setExperientialState] = useState(null)
   const [facts, setFacts] = useState([])
   const [questions, setQuestions] = useState([])
   const [commitments, setCommitments] = useState([])
+  const [thoughts, setThoughts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sessionActive, setSessionActive] = useState(false)
-  
+
   // Integrated interaction state
   const [message, setMessage] = useState('')
   const [conversation, setConversation] = useState([])
   const [interacting, setInteracting] = useState(false)
+  const [lastActivity, setLastActivity] = useState(Date.now())
+
+  // Override conversation if replay data is provided
+  const activeConversation = replayConversation || conversation
 
   useEffect(() => {
     if (sessionActive) {
@@ -23,14 +41,59 @@ function ExperientialPanel({ instanceId, sessionId, apiKeyConfigured, openrouter
     }
   }, [sessionId, sessionActive])
 
+  // Pulse Heartbeat: Trigger self-stimulation when idle
+  useEffect(() => {
+    if (!sessionActive || !apiKeyConfigured) return
+
+    const interval = setInterval(async () => {
+      // Basic idle check for pulse
+      const idleTime = Date.now() - lastActivity
+      if (idleTime > 10000) { // Check after 10s idle (human attention span)
+        console.log('[PULSE v2] Triggering self-stimulation...', { instanceId, sessionId })
+        try {
+          const res = await fetch(`${apiBase}/experience/pulse`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              instance_id: instanceId,
+              session_id: sessionId,
+              openai_api_key: openaiApiKey || null,
+              model_name: 'mistralai/mistral-7b-instruct:free'
+            })
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (data.triggered) {
+              console.log('Self-stimulation triggered:', data.result?.type)
+              await fetchExperientialState() // Refresh to see new thoughts
+            }
+          }
+        } catch (err) {
+          console.error('Pulse failed:', err)
+        }
+      }
+    }, 5000) // Poll every 5s to catch 10s idle threshold
+
+    return () => clearInterval(interval)
+  }, [sessionActive, lastActivity, instanceId, sessionId, apiKeyConfigured, openaiApiKey, apiBase])
+
   const startSession = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`${API_BASE}/experience/session?instance_id=${instanceId}&session_id=${sessionId}`, {
+      const res = await fetch(`${apiBase}/experience/session?instance_id=${instanceId}&session_id=${sessionId}`, {
         method: 'POST'
       })
       if (!res.ok) throw new Error('Failed to start session')
       setSessionActive(true)
+      
+      // Start mission recording (non-blocking)
+      cognitiveApi.startMissionRecording(
+        `Session-${sessionId?.slice(0, 8)}`,
+        'HMT interaction session',
+        OPERATOR_ID,
+        instanceId
+      ).catch(() => {})
+      
       await fetchExperientialState()
     } catch (err) {
       setError(err.message)
@@ -42,7 +105,7 @@ function ExperientialPanel({ instanceId, sessionId, apiKeyConfigured, openrouter
   const endSession = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`${API_BASE}/experience/session/${sessionId}`, {
+      const res = await fetch(`${apiBase}/experience/session/${sessionId}`, {
         method: 'DELETE'
       })
       const data = await res.json()
@@ -63,14 +126,16 @@ function ExperientialPanel({ instanceId, sessionId, apiKeyConfigured, openrouter
   const fetchExperientialState = async () => {
     try {
       const [stateRes, factsRes, questionsRes, commitmentsRes] = await Promise.all([
-        fetch(`${API_BASE}/experience/session/${sessionId}`),
-        fetch(`${API_BASE}/experience/facts/${sessionId}`),
-        fetch(`${API_BASE}/experience/questions/${sessionId}`),
-        fetch(`${API_BASE}/experience/commitments/${sessionId}`)
+        fetch(`${apiBase}/experience/session/${sessionId}`),
+        fetch(`${apiBase}/experience/facts/${sessionId}`),
+        fetch(`${apiBase}/experience/questions/${sessionId}`),
+        fetch(`${apiBase}/experience/commitments/${sessionId}`)
       ])
-      
+
       if (stateRes.ok) {
-        setExperientialState(await stateRes.json())
+        const data = await stateRes.json()
+        setExperientialState(data)
+        setThoughts(data.internal_thoughts || [])
       }
       if (factsRes.ok) {
         const factsData = await factsRes.json()
@@ -89,41 +154,78 @@ function ExperientialPanel({ instanceId, sessionId, apiKeyConfigured, openrouter
     }
   }
 
-  const sendIntegratedMessage = async () => {
-    if (!message.trim() || !apiKeyConfigured) return
-    
-    const userMessage = message.trim()
-    setMessage('')
-    setConversation(prev => [...prev, { role: 'user', content: userMessage }])
+  const sendIntegratedMessage = async (text = null) => {
+    // Determine message content
+    const content = text || message
+
+    if (!content.trim() || !apiKeyConfigured) return
+
+    // Clear input if using manual input
+    if (!text) setMessage('')
+
+    setLastActivity(Date.now())
+    setConversation(prev => [...prev, { role: 'user', content: content.trim() }])
     setInteracting(true)
-    
+
     try {
-      const res = await fetch(`${API_BASE}/integrated/interact`, {
+      // Log operator input to audit
+      cognitiveApi.logAuditEvent(
+        'operator.command', 
+        'chat_input', 
+        { message: content.trim() },
+        { sessionId, brainId: instanceId }
+      ).catch(() => {})
+
+      // Analyze operator message for adaptive communication (non-blocking)
+      cognitiveApi.analyzeOperatorMessage(OPERATOR_ID, content.trim()).catch(() => {})
+      
+      // Update cognitive load metrics based on activity
+      cognitiveApi.updateCognitiveLoad(OPERATOR_ID, {
+        active_detections: 0.3,
+        decision_pending: 0.2,
+        information_rate: 0.4,
+        task_complexity: 0.3
+      }).catch(() => {})
+
+      const res = await fetch(`${apiBase}/integrated/interact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           instance_id: instanceId,
           session_id: sessionId,
-          user_input: userMessage,
-          openrouter_api_key: openrouterApiKey,
+          user_input: content.trim(),
+          openai_api_key: openaiApiKey,
           model_name: 'mistralai/mistral-7b-instruct:free'
         })
       })
-      
+
       if (!res.ok) {
         const errData = await res.json()
         throw new Error(errData.detail || 'Request failed')
       }
-      
+
       const data = await res.json()
+      
+      // Log AI decision to audit (non-blocking)
+      cognitiveApi.logAIDecision(
+        'chat_response',
+        data.response || 'Response generated',
+        0.85,
+        'Generated based on operator query',
+        { sessionId, brainId: instanceId }
+      ).catch(() => {})
+
       setConversation(prev => [...prev, { role: 'assistant', content: data.response }])
       setExperientialState(data.experiential_state)
-      
+
       // Refresh working memory
       await fetchExperientialState()
+
+      return data // Return data for automated runner
     } catch (err) {
       setError(err.message)
       setConversation(prev => [...prev, { role: 'error', content: err.message }])
+      throw err
     } finally {
       setInteracting(false)
     }
@@ -131,250 +233,32 @@ function ExperientialPanel({ instanceId, sessionId, apiKeyConfigured, openrouter
 
   if (!sessionActive) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
-        <div className="text-center max-w-md">
-          <Sparkles className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Experiential Layer</h2>
-          <p className="text-slate-400 mb-6">
-            The Experiential Layer tracks session context, extracts salient facts, 
-            monitors open questions, and remembers commitments. It integrates with 
-            the Nurture Layer for full CACA stack processing.
-          </p>
-          <button
-            onClick={startSession}
-            disabled={loading || !instanceId}
-            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 text-white py-3 px-6 rounded-lg transition-colors mx-auto"
-          >
-            <Brain className="w-5 h-5" />
-            Start Experiential Session
-          </button>
-          {!instanceId && (
-            <p className="text-amber-400 text-sm mt-4">Select a nurture instance first</p>
-          )}
-        </div>
-      </div>
+      <ExperienceSplash
+        startSession={startSession}
+        loading={loading}
+        instanceId={instanceId}
+      />
     )
   }
 
   return (
-    <div className="h-full flex">
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Session Header */}
-        <div className="bg-slate-800/50 border-b border-slate-700 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-cyan-400" />
-              <div>
-                <span className="text-white font-medium">Integrated Session</span>
-                <span className="text-slate-400 text-sm ml-2">
-                  (Nurture + Experience)
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={fetchExperientialState}
-                className="p-2 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
-                title="Refresh state"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-              <button
-                onClick={endSession}
-                className="text-sm text-red-400 hover:text-red-300 px-3 py-1 hover:bg-red-900/20 rounded"
-              >
-                End Session
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Conversation */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {conversation.length === 0 && (
-            <div className="text-center text-slate-500 py-8">
-              <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Start a conversation to see integrated Nurture + Experience processing</p>
-            </div>
-          )}
-          {conversation.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                  msg.role === 'user'
-                    ? 'bg-cyan-600 text-white'
-                    : msg.role === 'error'
-                    ? 'bg-red-900/50 text-red-200'
-                    : 'bg-slate-700 text-slate-200'
-                }`}
-              >
-                {msg.content}
-              </div>
-            </div>
-          ))}
-          {interacting && (
-            <div className="flex justify-start">
-              <div className="bg-slate-700 text-slate-400 rounded-lg px-4 py-2">
-                <span className="animate-pulse">Processing through CACA stack...</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Input */}
-        <div className="border-t border-slate-700 p-4">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendIntegratedMessage()}
-              placeholder="Type a message..."
-              className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-              disabled={interacting}
-            />
-            <button
-              onClick={sendIntegratedMessage}
-              disabled={!message.trim() || interacting || !apiKeyConfigured}
-              className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
-          {!apiKeyConfigured && (
-            <p className="text-amber-400 text-sm mt-2">Configure OpenRouter API key first</p>
-          )}
-        </div>
-      </div>
-
-      {/* Right Sidebar - Experiential State */}
-      <div className="w-80 border-l border-slate-700 bg-slate-800/30 overflow-y-auto">
-        {/* Context Summary */}
-        {experientialState && (
-          <div className="p-4 border-b border-slate-700">
-            <h3 className="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
-              <Brain className="w-4 h-4" />
-              Session State
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Interactions</span>
-                <span className="text-white">{experientialState.interaction_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Topic</span>
-                <span className="text-white truncate ml-2">{experientialState.topic_summary || '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Emotion</span>
-                <span className={`${
-                  experientialState.emotion_summary?.includes('positive') ? 'text-green-400' :
-                  experientialState.emotion_summary?.includes('negative') ? 'text-red-400' :
-                  'text-slate-300'
-                }`}>
-                  {experientialState.emotion_summary || 'neutral'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">User State</span>
-                <span className="text-white">{experientialState.user_summary || '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Familiarity</span>
-                <span className="text-white">{(experientialState.session_familiarity * 100).toFixed(0)}%</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Salient Facts */}
-        <div className="p-4 border-b border-slate-700">
-          <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" />
-            Salient Facts ({facts.length})
-          </h3>
-          {facts.length === 0 ? (
-            <p className="text-slate-500 text-sm">No facts extracted yet</p>
-          ) : (
-            <div className="space-y-2">
-              {facts.slice(0, 5).map((fact, i) => (
-                <div key={i} className="bg-slate-800 rounded p-2 text-sm">
-                  <p className="text-slate-300">{fact.content}</p>
-                  <div className="flex justify-between mt-1 text-xs text-slate-500">
-                    <span>{fact.source}</span>
-                    <span>salience: {(fact.salience_score * 100).toFixed(0)}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Open Questions */}
-        <div className="p-4 border-b border-slate-700">
-          <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-            <HelpCircle className="w-4 h-4" />
-            Open Questions ({questions.filter(q => !q.resolved).length})
-          </h3>
-          {questions.length === 0 ? (
-            <p className="text-slate-500 text-sm">No questions tracked</p>
-          ) : (
-            <div className="space-y-2">
-              {questions.slice(0, 5).map((q, i) => (
-                <div key={i} className={`bg-slate-800 rounded p-2 text-sm ${q.resolved ? 'opacity-50' : ''}`}>
-                  <p className="text-slate-300">{q.question}</p>
-                  <div className="flex justify-between mt-1 text-xs">
-                    <span className={q.resolved ? 'text-green-400' : 'text-amber-400'}>
-                      {q.resolved ? '✓ resolved' : 'open'}
-                    </span>
-                    <span className="text-slate-500">attempts: {q.attempted_answers}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Commitments */}
-        <div className="p-4">
-          <h3 className="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
-            <CheckSquare className="w-4 h-4" />
-            Commitments ({commitments.filter(c => !c.fulfilled).length})
-          </h3>
-          {commitments.length === 0 ? (
-            <p className="text-slate-500 text-sm">No commitments made</p>
-          ) : (
-            <div className="space-y-2">
-              {commitments.slice(0, 5).map((c, i) => (
-                <div key={i} className={`bg-slate-800 rounded p-2 text-sm ${c.fulfilled ? 'opacity-50' : ''}`}>
-                  <p className="text-slate-300">{c.promise}</p>
-                  <span className={`text-xs ${c.fulfilled ? 'text-green-400' : 'text-purple-400'}`}>
-                    {c.fulfilled ? '✓ fulfilled' : 'active'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Context String Preview */}
-        {experientialState?.context_string && (
-          <div className="p-4 border-t border-slate-700">
-            <h3 className="text-sm font-semibold text-slate-400 mb-2">Context Injection</h3>
-            <pre className="text-xs text-slate-500 bg-slate-900 p-2 rounded overflow-x-auto whitespace-pre-wrap">
-              {experientialState.context_string || '(empty)'}
-            </pre>
-          </div>
-        )}
+    <div className="h-full flex overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
+        <ExperienceChat
+          conversation={activeConversation}
+          message={message}
+          setMessage={setMessage}
+          interacting={interacting}
+          sendIntegratedMessage={() => sendIntegratedMessage()}
+          apiKeyConfigured={apiKeyConfigured}
+          fetchExperientialState={fetchExperientialState}
+          endSession={endSession}
+        />
       </div>
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div className="fixed bottom-4 right-4 bg-[#991b1b] border border-[#ef4444] text-white px-4 py-2 z-50 font-mono text-sm">
           {error}
           <button onClick={() => setError(null)} className="ml-4 font-bold">×</button>
         </div>

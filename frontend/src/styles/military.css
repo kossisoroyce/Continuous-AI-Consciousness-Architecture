@@ -1,0 +1,331 @@
+/* Military/Tactical HUD Theme */
+
+:root {
+  --mil-bg-primary: #0a0c0f;
+  --mil-bg-secondary: #0d1117;
+  --mil-bg-tertiary: #161b22;
+  --mil-border: #30363d;
+  --mil-border-highlight: #3d444d;
+  
+  --mil-amber: #d4a62a;
+  --mil-amber-dim: #8b6914;
+  --mil-amber-glow: rgba(212, 166, 42, 0.15);
+  
+  --mil-cyan: #22d3ee;
+  --mil-cyan-dim: #0891b2;
+  --mil-cyan-glow: rgba(34, 211, 238, 0.1);
+  
+  --mil-green: #10b981;
+  --mil-green-dim: #047857;
+  
+  --mil-red: #ef4444;
+  --mil-red-dim: #991b1b;
+  
+  --mil-text-primary: #e6edf3;
+  --mil-text-secondary: #8b949e;
+  --mil-text-dim: #484f58;
+  
+  --mil-font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  --mil-font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Base tactical styling */
+.mil-panel {
+  background: var(--mil-bg-secondary);
+  border: 1px solid var(--mil-border);
+  position: relative;
+}
+
+.mil-panel::before,
+.mil-panel::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--mil-amber);
+}
+
+.mil-panel::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.mil-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Corner brackets for tactical look */
+.mil-corners {
+  position: relative;
+}
+
+.mil-corners::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: 
+    linear-gradient(to right, var(--mil-amber) 12px, transparent 12px) 0 0,
+    linear-gradient(to right, var(--mil-amber) 12px, transparent 12px) 0 100%,
+    linear-gradient(to left, var(--mil-amber) 12px, transparent 12px) 100% 0,
+    linear-gradient(to left, var(--mil-amber) 12px, transparent 12px) 100% 100%,
+    linear-gradient(to bottom, var(--mil-amber) 12px, transparent 12px) 0 0,
+    linear-gradient(to bottom, var(--mil-amber) 12px, transparent 12px) 100% 0,
+    linear-gradient(to top, var(--mil-amber) 12px, transparent 12px) 0 100%,
+    linear-gradient(to top, var(--mil-amber) 12px, transparent 12px) 100% 100%;
+  background-repeat: no-repeat;
+  background-size: 1px 12px, 1px 12px, 1px 12px, 1px 12px, 12px 1px, 12px 1px, 12px 1px, 12px 1px;
+}
+
+/* Tactical header bar */
+.mil-header {
+  background: linear-gradient(180deg, var(--mil-bg-tertiary) 0%, var(--mil-bg-secondary) 100%);
+  border-bottom: 1px solid var(--mil-border);
+  font-family: var(--mil-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Status indicators */
+.mil-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mil-font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.mil-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.mil-status-dot.online {
+  background: var(--mil-green);
+  box-shadow: 0 0 8px var(--mil-green);
+}
+
+.mil-status-dot.warning {
+  background: var(--mil-amber);
+  box-shadow: 0 0 8px var(--mil-amber);
+}
+
+.mil-status-dot.critical {
+  background: var(--mil-red);
+  box-shadow: 0 0 8px var(--mil-red);
+  animation: pulse-critical 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes pulse-critical {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+/* Tactical buttons */
+.mil-btn {
+  background: var(--mil-bg-tertiary);
+  border: 1px solid var(--mil-border);
+  color: var(--mil-text-secondary);
+  font-family: var(--mil-font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.mil-btn:hover {
+  border-color: var(--mil-amber);
+  color: var(--mil-amber);
+  background: var(--mil-amber-glow);
+}
+
+.mil-btn.primary {
+  border-color: var(--mil-amber-dim);
+  color: var(--mil-amber);
+}
+
+.mil-btn.primary:hover {
+  background: var(--mil-amber);
+  color: var(--mil-bg-primary);
+}
+
+/* Progress bars */
+.mil-progress {
+  height: 4px;
+  background: var(--mil-bg-primary);
+  border: 1px solid var(--mil-border);
+  overflow: hidden;
+}
+
+.mil-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--mil-amber-dim), var(--mil-amber));
+  transition: width 0.3s ease;
+}
+
+.mil-progress-bar.cyan {
+  background: linear-gradient(90deg, var(--mil-cyan-dim), var(--mil-cyan));
+}
+
+.mil-progress-bar.green {
+  background: linear-gradient(90deg, var(--mil-green-dim), var(--mil-green));
+}
+
+.mil-progress-bar.red {
+  background: linear-gradient(90deg, var(--mil-red-dim), var(--mil-red));
+}
+
+/* Metric displays */
+.mil-metric {
+  font-family: var(--mil-font-mono);
+}
+
+.mil-metric-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--mil-text-dim);
+  margin-bottom: 2px;
+}
+
+.mil-metric-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mil-amber);
+  line-height: 1;
+}
+
+.mil-metric-value.cyan {
+  color: var(--mil-cyan);
+}
+
+/* Grid overlay effect */
+.mil-grid-overlay {
+  position: relative;
+}
+
+.mil-grid-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.02) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.02) 75%, rgba(255, 255, 255, 0.02) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.02) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.02) 75%, rgba(255, 255, 255, 0.02) 76%, transparent 77%, transparent);
+  background-size: 50px 50px;
+}
+
+/* Scanline effect */
+.mil-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  opacity: 0.3;
+}
+
+/* Data readout style */
+.mil-readout {
+  font-family: var(--mil-font-mono);
+  font-size: 11px;
+  color: var(--mil-text-secondary);
+  background: var(--mil-bg-primary);
+  border: 1px solid var(--mil-border);
+  padding: 8px 12px;
+}
+
+.mil-readout-header {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--mil-amber);
+  border-bottom: 1px solid var(--mil-border);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+/* Targeting reticle animation */
+.mil-reticle {
+  position: relative;
+  display: inline-block;
+}
+
+.mil-reticle::before,
+.mil-reticle::after {
+  content: '';
+  position: absolute;
+  border: 1px solid var(--mil-amber);
+  animation: reticle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes reticle-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Input styling */
+.mil-input {
+  background: var(--mil-bg-primary);
+  border: 1px solid var(--mil-border);
+  color: var(--mil-text-primary);
+  font-family: var(--mil-font-mono);
+  font-size: 12px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.mil-input:focus {
+  border-color: var(--mil-amber);
+  box-shadow: 0 0 0 1px var(--mil-amber-glow);
+}
+
+.mil-input::placeholder {
+  color: var(--mil-text-dim);
+}
+
+/* Scrollbar styling */
+.mil-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.mil-scroll::-webkit-scrollbar-track {
+  background: var(--mil-bg-primary);
+}
+
+.mil-scroll::-webkit-scrollbar-thumb {
+  background: var(--mil-border);
+  border-radius: 0;
+}
+
+.mil-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--mil-amber-dim);
+}

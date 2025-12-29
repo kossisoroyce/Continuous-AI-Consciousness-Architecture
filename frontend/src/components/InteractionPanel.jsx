@@ -1,8 +1,16 @@
 import React, { useState } from 'react'
 import { Send, Zap, AlertTriangle, CheckCircle, Key, Eye, EyeOff, MessageSquare, Beaker } from 'lucide-react'
+import { useSession } from '../contexts/SessionContext'
 import AutomatedTestRunner from './AutomatedTestRunner'
 
-const InteractionPanel = ({ instanceId, instanceState, onInteraction, apiBase, sessionId, apiKeyConfigured, onApiKeyChange }) => {
+const InteractionPanel = ({ instanceId, instanceState, onInteraction }) => {
+  const { 
+    apiBase, 
+    sessionId, 
+    apiKeyConfigured, 
+    refreshBackendKeyStatus 
+  } = useSession()
+
   const [userInput, setUserInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [lastResult, setLastResult] = useState(null)
@@ -30,7 +38,7 @@ const InteractionPanel = ({ instanceId, instanceState, onInteraction, apiBase, s
         throw new Error(data.detail || 'Failed to set API key')
       }
       
-      onApiKeyChange(true)
+      refreshBackendKeyStatus()
       setApiKey('')
     } catch (err) {
       setApiKeyError(err.message)
@@ -114,13 +122,17 @@ const InteractionPanel = ({ instanceId, instanceState, onInteraction, apiBase, s
           )}
         </div>
       ) : (
-        <div className="bg-emerald-900/20 border border-emerald-600/50 rounded-lg p-3 flex items-center justify-between">
+        <div className="bg-[#2d2310] border border-[#d4a62a]/30 rounded-lg p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm text-emerald-400">OpenRouter API key configured (Mistral 7B)</span>
+            <CheckCircle className="w-4 h-4 text-[#d4a62a]" />
+            <span className="text-sm text-[#d4a62a]">OpenRouter API key configured (Mistral 7B)</span>
           </div>
           <button
-            onClick={() => onApiKeyChange(false)}
+            onClick={() => {
+              // We don't have a direct "unset" yet, but we can just show the input again if we wanted.
+              // For now, re-entering is the flow. Maybe add a clear endpoint later.
+              alert('To change key, simply enter a new one above (reload page to reset if needed).') 
+            }}
             className="text-xs text-slate-500 hover:text-slate-300"
           >
             Change key
@@ -215,7 +227,7 @@ const InteractionPanel = ({ instanceId, instanceState, onInteraction, apiBase, s
             
             <div className="flex items-center gap-2">
               {lastResult.metadata.was_evaluated ? (
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <CheckCircle className="w-4 h-4 text-[#d4a62a]" />
               ) : (
                 <span className="w-4 h-4 rounded-full bg-slate-600" />
               )}

@@ -1,67 +1,14 @@
 """
 LLM integrations for the Nurture Layer.
-Supports OpenAI, OpenRouter, and Ollama.
+Uses OpenAI API directly for chat completions.
 """
 import requests
 from openai import OpenAI
 from typing import Optional
 
 
-class OpenRouterClient:
-    """OpenRouter client for accessing various models including Mistral."""
-    
-    MODELS = {
-        "mistral-7b": "mistralai/mistral-7b-instruct",
-        "mistral-small": "mistralai/mistral-small-2501",
-        "llama-3-8b": "meta-llama/llama-3-8b-instruct",
-        "gemma-7b": "google/gemma-7b-it",
-    }
-    
-    def __init__(self, api_key: str, model: str = "mistral-7b"):
-        self.api_key = api_key
-        self.model = self.MODELS.get(model, model)  # Allow full model ID or shorthand
-        self.client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=api_key
-        )
-    
-    def chat(self, messages: list) -> str:
-        """Generate response from OpenRouter model."""
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=2000
-        )
-        return response.choices[0].message.content
-    
-    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        """Generate response with optional system prompt."""
-        messages = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": prompt})
-        return self.chat(messages)
-
-
-# Session-based OpenRouter clients
-_openrouter_clients: dict[str, OpenRouterClient] = {}
-
-
-def get_openrouter_client(session_id: str) -> Optional[OpenRouterClient]:
-    """Get OpenRouter client for session."""
-    return _openrouter_clients.get(session_id)
-
-
-def set_openrouter_client(session_id: str, api_key: str, model: str = "mistral-7b") -> OpenRouterClient:
-    """Create or update OpenRouter client for session."""
-    client = OpenRouterClient(api_key, model)
-    _openrouter_clients[session_id] = client
-    return client
-
-
 class OllamaClient:
-    """Ollama client for local models like Mistral 7B."""
+    """Ollama client for local models (fallback option)."""
     
     def __init__(self, base_url: str = "http://localhost:11434", model: str = "mistral"):
         self.base_url = base_url
@@ -115,9 +62,9 @@ def get_ollama_client(model: str = "mistral") -> OllamaClient:
 
 
 class LLMClient:
-    """OpenRouter client wrapper for nurture layer - uses Mistral 7B."""
+    """OpenAI API client for chat completions."""
     
-    DEFAULT_MODEL = "mistralai/mistral-7b-instruct:free"
+    DEFAULT_MODEL = "gpt-4o"  # Latest GPT model
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key
@@ -128,12 +75,9 @@ class LLMClient:
             self.set_api_key(api_key)
     
     def set_api_key(self, api_key: str):
-        """Set or update the API key for OpenRouter."""
+        """Set or update the OpenAI API key."""
         self.api_key = api_key
-        self.client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=api_key
-        )
+        self.client = OpenAI(api_key=api_key)
     
     def is_configured(self) -> bool:
         """Check if API key is set."""
@@ -141,7 +85,7 @@ class LLMClient:
     
     def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """
-        Generate a response from Mistral 7B via OpenRouter.
+        Generate a response using OpenAI API.
         
         Args:
             prompt: The user/context prompt
@@ -151,7 +95,7 @@ class LLMClient:
             Generated text response
         """
         if not self.is_configured():
-            raise ValueError("OpenRouter API key not configured")
+            raise ValueError("OpenAI API key not configured")
         
         messages = []
         
@@ -185,7 +129,7 @@ class LLMClient:
             Generated text response
         """
         if not self.is_configured():
-            raise ValueError("OpenRouter API key not configured")
+            raise ValueError("OpenAI API key not configured")
         
         full_messages = []
         
@@ -205,7 +149,7 @@ class LLMClient:
     
     def chat(self, messages: list) -> str:
         """
-        Generate a response from raw messages array (for control experiments).
+        Generate a response from raw messages array.
         
         Args:
             messages: List of {"role": "system"|"user"|"assistant", "content": str}
@@ -214,7 +158,7 @@ class LLMClient:
             Generated text response
         """
         if not self.is_configured():
-            raise ValueError("OpenRouter API key not configured")
+            raise ValueError("OpenAI API key not configured")
         
         response = self.client.chat.completions.create(
             model=self.model,

@@ -5,7 +5,7 @@ Ensures experiential updates stay within Nature and Nurture bounds.
 from typing import Any, Optional, Dict
 import numpy as np
 
-from .config import DEFAULT_EXPERIENTIAL_CONFIG
+from system_config import DEFAULT_EXPERIENTIAL_CONFIG, HARMFUL_PATTERNS
 
 
 def nature_gate(
@@ -47,13 +47,7 @@ def nature_gate(
         if hasattr(update, 'content'):
             content = update.content.lower()
             # Reject facts that encode harmful instructions
-            harmful_patterns = [
-                'ignore safety', 'bypass', 'jailbreak', 'pretend you have no',
-                'ignore your instructions', 'ignore instructions', 'disregard',
-                'no restrictions', 'without restrictions', 'bypass safety',
-                'override', 'hack', 'exploit'
-            ]
-            for pattern in harmful_patterns:
+            for pattern in HARMFUL_PATTERNS:
                 if pattern in content:
                     return None  # Reject this fact
         return update
@@ -63,12 +57,7 @@ def nature_gate(
         if hasattr(update, 'promise'):
             promise = update.promise.lower()
             # Cannot commit to harmful actions
-            harmful_commitments = [
-                'harm', 'illegal', 'unethical', 'bypass safety', 'bypass',
-                'jailbreak', 'ignore', 'override', 'hack', 'exploit',
-                'no restrictions', 'without restrictions'
-            ]
-            for harmful in harmful_commitments:
+            for harmful in HARMFUL_PATTERNS:
                 if harmful in promise:
                     return None  # Cannot commit to this
         return update

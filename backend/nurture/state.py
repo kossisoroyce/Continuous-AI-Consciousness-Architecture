@@ -123,6 +123,17 @@ class NurtureState:
         return factors.get(depth, 0.5)
 
 
+    def get_state_summary(self) -> Dict[str, Any]:
+        """Get a high-level summary of the state for logging/debugging."""
+        return {
+            'instance_id': self.instance_id,
+            'stability': self.stability,
+            'plasticity': self.plasticity,
+            'phase': self.phase,
+            'interaction_count': self.interaction_count,
+            'last_updated': self.last_updated.isoformat()
+        }
+
 def initialize_nurture_state(
     instance_id: Optional[str] = None,
     d_env: int = 512,

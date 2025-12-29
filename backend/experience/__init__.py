@@ -14,7 +14,7 @@ from .state import (
     Commitment,
     initialize_experiential_state,
 )
-from .config import ExperientialConfig, DEFAULT_EXPERIENTIAL_CONFIG
+from system_config import ExperientialConfig, DEFAULT_EXPERIENTIAL_CONFIG
 from .engine import ExperientialEngine
 from .gates import nature_gate, nurture_gate, apply_experiential_gates
 

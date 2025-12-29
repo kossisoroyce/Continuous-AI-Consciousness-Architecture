@@ -15,8 +15,8 @@ const phaseConfig = {
   },
   stabilization: {
     label: 'Stabilization',
-    color: 'bg-emerald-500',
-    textColor: 'text-emerald-400',
+    color: 'bg-[#d4a62a]',
+    textColor: 'text-[#d4a62a]',
     description: 'Character solidifying'
   },
   maturity: {

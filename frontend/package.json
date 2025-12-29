@@ -9,10 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@arwes/react": "^1.0.0-alpha.23",
+    "@emotion/react": "^11.14.0",
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow/tfjs": "^4.22.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.309.0",
+    "onnxruntime-web": "^1.23.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.309.0",
-    "recharts": "^2.10.4"
+    "react-leaflet": "^4.2.1",
+    "recharts": "^2.10.4",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",

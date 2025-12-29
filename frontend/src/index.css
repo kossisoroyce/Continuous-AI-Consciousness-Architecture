@@ -1,20 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import './styles/arwes-theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --midnight-bg: #030712;
-  --midnight-surface: #0a0f1a;
-  --midnight-card: #111827;
-  --midnight-border: #1f2937;
-  --midnight-text: #f3f4f6;
-  --midnight-muted: #6b7280;
+  --mil-bg-primary: #0a0c0f;
+  --mil-bg-secondary: #0d1117;
+  --mil-bg-tertiary: #161b22;
+  --mil-border: #30363d;
+  --mil-amber: #d4a62a;
+  --mil-amber-dim: #8b6914;
+  --mil-cyan: #22d3ee;
+  --mil-green: #10b981;
+  --mil-red: #ef4444;
+  --mil-text: #e6edf3;
+  --mil-text-dim: #8b949e;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--midnight-bg);
-  color: var(--midnight-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--mil-bg-primary);
+  color: var(--mil-text);
 }
 
 /* Midnight dark mode overrides */

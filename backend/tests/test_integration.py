@@ -14,9 +14,9 @@ from datetime import datetime
 
 from nurture.state import initialize_nurture_state
 from nurture.engine import NurtureEngine
-from nurture.config import DEFAULT_CONFIG
+from system_config import DEFAULT_NURTURE_CONFIG as DEFAULT_CONFIG
 from experience.engine import ExperientialEngine
-from experience.config import DEFAULT_EXPERIENTIAL_CONFIG
+from system_config import DEFAULT_EXPERIENTIAL_CONFIG
 
 
 def run_integration_test(api_key: str = None):

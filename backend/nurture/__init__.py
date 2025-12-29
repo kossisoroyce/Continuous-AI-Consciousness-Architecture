@@ -1,7 +1,7 @@
 """
 Nurture Layer Core Module
 """
-from .config import NurtureConfig, DEFAULT_CONFIG
+from system_config import NurtureConfig, DEFAULT_NURTURE_CONFIG as DEFAULT_CONFIG
 from .state import NurtureState, EvaluationResult, InteractionMetadata, initialize_nurture_state
 from .engine import NurtureEngine, create_engine
 from .significance import compute_significance, should_evaluate

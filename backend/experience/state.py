@@ -261,6 +261,17 @@ class ExperientialState:
         
         return "\n".join(parts) if parts else ""
 
+    def get_state_summary(self) -> Dict[str, Any]:
+        """Get a high-level summary of the state for logging/debugging."""
+        return {
+            'session_id': self.session_id,
+            'interaction_count': self.conversation_model.interaction_count,
+            'facts_count': len(self.working_memory.salient_facts),
+            'questions_count': len(self.working_memory.open_questions),
+            'commitments_count': len(self.working_memory.commitments),
+            'last_updated': self.last_updated.isoformat()
+        }
+
 
 def initialize_experiential_state(
     session_id: Optional[str] = None,

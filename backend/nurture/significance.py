@@ -4,8 +4,8 @@ Significance filter for determining when full evaluation is needed.
 import re
 import numpy as np
 from typing import Dict, Any, Tuple
-from .config import (
-    NurtureConfig, DEFAULT_CONFIG,
+from system_config import (
+    NurtureConfig, DEFAULT_NURTURE_CONFIG as DEFAULT_CONFIG,
     VALUE_KEYWORDS, POSITIVE_FEEDBACK, NEGATIVE_FEEDBACK
 )
 from .state import NurtureState

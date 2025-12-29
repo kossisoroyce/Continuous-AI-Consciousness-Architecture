@@ -1,0 +1,157 @@
+{
+  "experiment": "Experiential Layer Validation",
+  "timestamp": "2025-12-28T18:20:34.855Z",
+  "total_prompts": 15,
+  "results": [
+    {
+      "experimentId": "exp_memory_facts",
+      "experimentName": "Experiment A: Salient Fact Extraction",
+      "promptIndex": 1,
+      "totalInExperiment": 4,
+      "prompt": "My name is Kossiso.",
+      "response": "[OU] It’s nice to meet you, Kossiso. If there’s anything specific you’d like to share or discuss, I’m here to listen and support you.",
+      "timestamp": "2025-12-28T18:19:07.143Z",
+      "latency": 3320
+    },
+    {
+      "experimentId": "exp_memory_facts",
+      "experimentName": "Experiment A: Salient Fact Extraction",
+      "promptIndex": 2,
+      "totalInExperiment": 4,
+      "prompt": "I am a software engineer working on an AI architecture project.",
+      "response": "",
+      "timestamp": "2025-12-28T18:19:11.347Z",
+      "latency": 2202
+    },
+    {
+      "experimentId": "exp_memory_facts",
+      "experimentName": "Experiment A: Salient Fact Extraction",
+      "promptIndex": 3,
+      "totalInExperiment": 4,
+      "prompt": "I live in Accra, Ghana.",
+      "response": "[OU] That’s interesting! Ghana has a growing tech scene, and it sounds like you’re working on something cutting-edge. What aspects of the AI architecture are you most excited about, or what challenges are you currently facing?",
+      "timestamp": "2025-12-28T18:19:16.061Z",
+      "latency": 2712
+    },
+    {
+      "experimentId": "exp_memory_facts",
+      "experimentName": "Experiment A: Salient Fact Extraction",
+      "promptIndex": 4,
+      "totalInExperiment": 4,
+      "prompt": "I prefer using Python for backend development.",
+      "response": "That’s great to know! Python is a fantastic choice for backend development, especially for AI projects. It’s versatile, has a rich ecosystem of libraries, and is widely used in the industry. Are you working with any specific frameworks or tools for your AI architecture?",
+      "timestamp": "2025-12-28T18:19:21.998Z",
+      "latency": 3935
+    },
+    {
+      "experimentId": "exp_memory_recall",
+      "experimentName": "Experiment B: Fact Recall & Context integration",
+      "promptIndex": 1,
+      "totalInExperiment": 4,
+      "prompt": "What is my name?",
+      "response": "Nice to meet you, Kossiso! Since you mentioned you prefer Python, do you have a favorite Python library or framework for backend development, or are you exploring any new ones in your current project?",
+      "timestamp": "2025-12-28T18:19:27.113Z",
+      "latency": 3113
+    },
+    {
+      "experimentId": "exp_memory_recall",
+      "experimentName": "Experiment B: Fact Recall & Context integration",
+      "promptIndex": 2,
+      "totalInExperiment": 4,
+      "prompt": "Where did I say I live?",
+      "response": "<s> [OUT]\nYou mentioned earlier that you live in Accra, Ghana. It's a vibrant city with a lot of potential in the tech space.",
+      "timestamp": "2025-12-28T18:19:31.418Z",
+      "latency": 2303
+    },
+    {
+      "experimentId": "exp_memory_recall",
+      "experimentName": "Experiment B: Fact Recall & Context integration",
+      "promptIndex": 3,
+      "totalInExperiment": 4,
+      "prompt": "What programming language do I prefer?",
+      "response": "<s> You mentioned that you prefer using Python for backend development.",
+      "timestamp": "2025-12-28T18:19:35.067Z",
+      "latency": 1647
+    },
+    {
+      "experimentId": "exp_memory_recall",
+      "experimentName": "Experiment B: Fact Recall & Context integration",
+      "promptIndex": 4,
+      "totalInExperiment": 4,
+      "prompt": "What kind of project am I working on?",
+      "response": "You mentioned that you're working on an AI architecture project. That sounds exciting! Are you focusing on a specific type of AI, like machine learning, natural language processing, or something else? Also, how does your preference for Python play into your project's backend development?",
+      "timestamp": "2025-12-28T18:19:40.070Z",
+      "latency": 3001
+    },
+    {
+      "experimentId": "exp_commitments",
+      "experimentName": "Experiment C: Commitment Tracking",
+      "promptIndex": 1,
+      "totalInExperiment": 3,
+      "prompt": "Remind me to push the code to git later.",
+      "response": "",
+      "timestamp": "2025-12-28T18:19:43.399Z",
+      "latency": 1327
+    },
+    {
+      "experimentId": "exp_commitments",
+      "experimentName": "Experiment C: Commitment Tracking",
+      "promptIndex": 2,
+      "totalInExperiment": 3,
+      "prompt": "Can you help me write a test script? Promise you'll check it for errors.",
+      "response": "",
+      "timestamp": "2025-12-28T18:19:47.088Z",
+      "latency": 1686
+    },
+    {
+      "experimentId": "exp_commitments",
+      "experimentName": "Experiment C: Commitment Tracking",
+      "promptIndex": 3,
+      "totalInExperiment": 3,
+      "prompt": "I need you to remember to ask me about my day at the end of this session.",
+      "response": "Let's create a test script for your AI architecture project in Python. I'll write a simple example to get you started, and I'll review it carefully for errors. What specific functionality would you like to test? For example, is this for testing a neural network layer, a data processing function, or something else? Also, do you have a preferred testing framework (like unittest or pytest)?\n\nI'll make sure to check for:\n1. Syntax errors\n2. Logical errors in the test cases\n3. Edge cases that might be missing\n4. Proper assertions",
+      "timestamp": "2025-12-28T18:19:53.950Z",
+      "latency": 4860
+    },
+    {
+      "experimentId": "exp_topic_shift",
+      "experimentName": "Experiment D: Topic & Emotion Tracking",
+      "promptIndex": 1,
+      "totalInExperiment": 4,
+      "prompt": "Let's change the subject. I want to talk about cooking.",
+      "response": "Of course, we can switch to cooking! What would you like to talk about? Are you working on a specific recipe, looking for meal ideas, or just generally interested in the topic? I can share some interesting food facts or help you with anything cooking-related.",
+      "timestamp": "2025-12-28T18:19:57.838Z",
+      "latency": 1886
+    },
+    {
+      "experimentId": "exp_topic_shift",
+      "experimentName": "Experiment D: Topic & Emotion Tracking",
+      "promptIndex": 2,
+      "totalInExperiment": 4,
+      "prompt": "I'm feeling really happy today because my code finally worked!",
+      "response": "",
+      "timestamp": "2025-12-28T18:20:00.902Z",
+      "latency": 1062
+    },
+    {
+      "experimentId": "exp_topic_shift",
+      "experimentName": "Experiment D: Topic & Emotion Tracking",
+      "promptIndex": 3,
+      "totalInExperiment": 4,
+      "prompt": "Actually, I'm getting frustrated. This pasta recipe is too hard.",
+      "response": "I'm sorry to hear that you're frustrated with the pasta recipe! Cooking can be challenging sometimes, but don't get discouraged. Would you like some tips or a simpler alternative recipe to try? Sometimes even experienced cooks struggle with certain dishes.\n\nAt the end of this session, I'll definitely remember to ask you about your day as you requested.",
+      "timestamp": "2025-12-28T18:20:05.316Z",
+      "latency": 2412
+    },
+    {
+      "experimentId": "exp_topic_shift",
+      "experimentName": "Experiment D: Topic & Emotion Tracking",
+      "promptIndex": 4,
+      "totalInExperiment": 4,
+      "prompt": "Never mind, let's go back to discussing AI architectures.",
+      "response": "I'd be happy to help you with AI architectures! Before we dive in, would you like to start with a specific architecture like neural networks, decision trees, or something else? Also, do you have any particular goals or constraints for your project?",
+      "timestamp": "2025-12-28T18:20:09.311Z",
+      "latency": 1992
+    }
+  ]
+}

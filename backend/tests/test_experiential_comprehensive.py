@@ -17,7 +17,7 @@ from experience.state import (
     ExperientialState, ConversationModel, WorkingMemory, PersistentTraces,
     SalientFact, OpenQuestion, Commitment, initialize_experiential_state
 )
-from experience.config import ExperientialConfig, DEFAULT_EXPERIENTIAL_CONFIG
+from system_config import ExperientialConfig, DEFAULT_EXPERIENTIAL_CONFIG
 from experience.engine import ExperientialEngine
 from experience.gates import nature_gate, nurture_gate, apply_experiential_gates
 from nurture.state import initialize_nurture_state
