@@ -17,6 +17,10 @@
   <a href="#documentation">Docs</a>
 </p>
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="HMT-Zero Interface" width="800"/>
+</p>
+
 ---
 
 ## What This Is
